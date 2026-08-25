@@ -1,5 +1,10 @@
+import os
 import asyncio
 import sqlite3
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from dotenv import load_dotenv
+
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
@@ -8,15 +13,34 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
+# .env faylini o'qish
+load_dotenv()
+
 # ==================== SOZLAMALAR ====================
-BOT_TOKEN = "8920693340:AAHG7tpvIFkHUNM9apwoADTjXbfvxuDPpv4" 
-ADMIN_ID = 166516988  
-GROUP_ID = -1004444565999  
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
+GROUP_ID = int(os.getenv("GROUP_ID", 0))
+CARD_NUMBER = os.getenv("CARD_NUMBER", "")
 
 CITY = "Denov"
-CALL_CENTER = "102"  
+CALL_CENTER = "102"
 DELIVERY_PRICE = 10000
-CARD_NUMBER = ""
+
+# ==================== RENDER UCHUN WEB SERVER ====================
+PORT = int(os.environ.get("PORT", 10000))
+
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"UzBurBot is running!")
+
+def run_server():
+    server = HTTPServer(("0.0.0.0", PORT), SimpleHandler)
+    server.serve_forever()
+
+# Serverni alohida oqimda ishga tushiramiz (Render uxlab qolmasligi uchun)
+threading.Thread(target=run_server, daemon=True).start()
 
 # ==================== FSM STATES ====================
 class OrderState(StatesGroup):
@@ -603,7 +627,7 @@ async def get_location(msg: Message):
         
         try:
             await msg.bot.send_message(ADMIN_ID, order_text)
-            if GROUP_ID != -1004444565999:
+            if GROUP_ID != 0:
                 await msg.bot.send_message(GROUP_ID, order_text)
         except Exception as e:
             print(f"Xatolik: {e}")
