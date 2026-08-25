@@ -36,11 +36,16 @@ class SimpleHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"Bot is active")
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain; charset=utf-8")
+        self.end_headers()
+
 def run_server():
     server = HTTPServer(("0.0.0.0", PORT), SimpleHandler)
     server.serve_forever()
 
-# Serverni alohida oqimda ishga tushiramiz (Render uxlab qolmasligi uchun)[cite: 1]
+# Serverni alohida oqimda ishga tushiramiz (Render uxlab qolmasligi uchun)
 threading.Thread(target=run_server, daemon=True).start()
 
 # ==================== FSM STATES ====================
